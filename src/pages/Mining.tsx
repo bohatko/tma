@@ -95,7 +95,7 @@ const QualityText = styled.div`
   color: white;
   text-align: center;
   margin-top: 10px;
-  font-size: 20px;
+  font-size: 18px;
 `;
 
 const TransactionCard = styled.div`
@@ -444,7 +444,8 @@ const Mining: React.FC = () => {
         <h2 style={{ 
           margin: 0, 
           color: isMining ? '#046611' : '#FF6B6B',
-          fontWeight: 'bold'
+          fontWeight: 'bold',
+          fontSize: '16px'
         }}>
           {isMining ? 'Сервер подключен' : 'Сервер отключён'}
         </h2>
@@ -475,7 +476,7 @@ const Mining: React.FC = () => {
                     </svg>
                   </TransactionIcon>
                   <TransactionInfo>
-                    <TransactionTitle>{transaction.title}</TransactionTitle>
+                    <TransactionTitle style={{ fontSize: '14px' }}>{transaction.title}</TransactionTitle>
                     <TransactionDate>{transaction.date}</TransactionDate>
                   </TransactionInfo>
                 </TransactionLeft>
@@ -487,7 +488,7 @@ const Mining: React.FC = () => {
         ) : (
           <TransactionItem>
             <TransactionInfo style={{ width: '100%' }}>
-              <TransactionTitle style={{ textAlign: 'center', width: '100%', fontSize: '16px' }}>
+              <TransactionTitle style={{ textAlign: 'center', width: '100%', fontSize: '12px' }}>
                 Нет транзакций
               </TransactionTitle>
             </TransactionInfo>
