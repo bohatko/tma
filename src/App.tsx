@@ -11,7 +11,7 @@ import { useTelegram } from "./hooks/useTelegram";
 
 const AppWrapper = styled.div`
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--tg-theme-bg-color);
   position: relative;
   overflow-y: auto;
 `;
@@ -20,7 +20,7 @@ const StyledApp = styled.div`
   padding: 20px;
   padding-bottom: 80px;
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--tg-theme-bg-color);
 `;
 
 const Container = styled.div`
@@ -66,7 +66,21 @@ const UserName = styled.div`
 `;
 
 function App() {
-  const { user, ready, error } = useTelegram();
+  const { user, ready, error, webApp } = useTelegram();
+
+  useEffect(() => {
+    // Настраиваем цвета приложения в соответствии с темой Telegram
+    if (webApp) {
+      // Можно настроить colors, button, etc.
+      console.log('Telegram WebApp инициализирован:', webApp.initDataUnsafe);
+
+      // Настройка цветов
+      document.documentElement.style.setProperty('--tg-theme-bg-color', webApp.themeParams.bg_color || '#f5f5f5');
+      document.documentElement.style.setProperty('--tg-theme-text-color', webApp.themeParams.text_color || '#333333');
+      document.documentElement.style.setProperty('--tg-theme-button-color', webApp.themeParams.button_color || '#0098E9');
+      document.documentElement.style.setProperty('--tg-theme-button-text-color', webApp.themeParams.button_text_color || '#ffffff');
+    }
+  }, [webApp]);
 
   return (
     <Router>

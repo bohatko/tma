@@ -1,19 +1,21 @@
 :root {
-  --tg-theme-bg-color: #efeff3;
-  --tg-theme-button-color: #2eaddc;
-  --tg-theme-button-text-color: white;
+  --tg-theme-bg-color: #f5f5f5;
+  --tg-theme-text-color: #333333;
+  --tg-theme-button-color: #0098E9;
+  --tg-theme-button-text-color: #ffffff;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #f5f5f5;
+  background-color: var(--tg-theme-bg-color);
+  color: var(--tg-theme-text-color);
+  transition: all 0.3s ease;
   min-height: 100vh;
 }
 
 #root {
   min-height: 100vh;
-  background-color: #f5f5f5;
 }
 
 * {
