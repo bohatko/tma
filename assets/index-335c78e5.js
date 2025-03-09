@@ -1382,7 +1382,7 @@ Please change the parent <Route path="${I}"> to <Route path="${I==="/"?"*":`${I}
   border-radius: 10px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   padding: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 0px;
 `,t1=rt.div`
   display: flex;
   justify-content: space-between;
