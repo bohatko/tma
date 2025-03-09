@@ -72,31 +72,19 @@ const StatusCircle = styled.div<{ isMining: boolean }>`
   }
 `;
 
-const NetworkQualityCard = styled.div`
-  background-color: #0098E9;
-  padding: 15px 25px;
-  border-radius: 12px;
-  margin: 20px 0;
-  width: 110%;
-  max-width: 600px;
+const MiningIcon = styled.div<{ isMining: boolean }>`
   color: white;
-`;
-
-const QualityHeader = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 10px;
-  font-size: 30px;
-  font-weight: bold;
-  text-align: center;
-`;
-
-const QualityText = styled.div`
-  color: white;
-  text-align: center;
-  margin-top: 10px;
   font-size: 18px;
+  font-weight: bold;
+  text-transform: uppercase;
+`;
+
+const MiningStatusText = styled.div`
+  text-align: center;
+  margin: 10px 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: ${props => props.children === 'Майнинг активен' ? '#0098E9' : '#000000'};
 `;
 
 const TransactionCard = styled.div`
@@ -255,21 +243,6 @@ const AlertButton = styled.button<{ primary?: boolean }>`
   cursor: pointer;
 `;
 
-const MiningIcon = styled.div<{ isMining: boolean }>`
-  color: white;
-  font-size: 18px;
-  font-weight: bold;
-  text-transform: uppercase;
-`;
-
-const MiningStatusText = styled.div`
-  text-align: center;
-  margin: 10px 0;
-  font-size: 18px;
-  font-weight: 500;
-  color: ${props => props.children === 'Майнинг активен' ? '#0098E9' : '#000000'};
-`;
-
 const TransactionHistory = styled.div`
   width: 100%;
   max-width: 600px;
@@ -390,7 +363,6 @@ const EmptyMessage = styled.div`
 
 const Mining: React.FC = () => {
   const [isMining, setIsMining] = useState<boolean>(false);
-  const [networkQuality, setNetworkQuality] = useState<number>(75);
   const { state, dispatch } = useAppContext();
   const [showNotification, setShowNotification] = useState<boolean>(false);
   const [notificationMessage, setNotificationMessage] = useState<string>('');
@@ -417,22 +389,15 @@ const Mining: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    let qualityInterval: NodeJS.Timeout | null = null;
     let earningsInterval: NodeJS.Timeout | null = null;
 
     if (isMining) {
-      // Обновление качества сети с интервалом
-      qualityInterval = setInterval(() => {
-        const randomQuality = Math.floor(Math.random() * 30) + 70;
-        setNetworkQuality(randomQuality);
-      }, 3000);
-
       // Добавление дохода с интервалом
       earningsInterval = setInterval(() => {
         // Рассчитываем доход на основе арендованных серверов
         let incomeAmount = 0;
         
-        // Проверяем наличие арендованных серверов
+        // Если есть арендованные серверы, берем их почасовой доход
         if (state.rentedServers.length > 0) {
           // Суммируем почасовой доход всех серверов
           const hourlyIncome = state.rentedServers.reduce(
@@ -443,62 +408,56 @@ const Mining: React.FC = () => {
           // Переводим часовой доход в доход за 5 секунд
           // (hourlyIncome / 3600) * 5 = hourlyIncome * 5 / 3600
           incomeAmount = hourlyIncome * 5 / 3600;
-          
-          // Применяем множитель качества сети (от 0.7 до 1.0)
-          const qualityMultiplier = networkQuality / 100;
-          incomeAmount = incomeAmount * qualityMultiplier;
-          
-          // Добавляем доход на баланс только если он больше нуля
-          if (incomeAmount > 0) {
-            dispatch({
-              type: 'SET_BALANCE',
-              payload: state.balance + incomeAmount
-            });
-            
-            // Добавляем транзакцию о начислении
-            const date = new Date();
-            const formattedDate = date.toLocaleString('ru-RU', {
-              day: '2-digit',
-              month: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit'
-            });
-            
-            const incomeTransaction = {
-              id: Date.now(),
-              title: 'Доход от майнинга',
-              date: formattedDate,
-              amount: `+${incomeAmount.toFixed(8)} USDT`
-            };
-            
-            setTransactions(prev => {
-              const newTransactions = [incomeTransaction, ...prev];
-              localStorage.setItem('miningTransactions', JSON.stringify(newTransactions));
-              return newTransactions;
-            });
-            
-            // Добавляем в историю транзакций приложения
-            dispatch({
-              type: 'ADD_TRANSACTION',
-              payload: {
-                id: Date.now().toString(),
-                type: 'INCOME',
-                amount: incomeAmount,
-                description: 'Доход от майнинга',
-                timestamp: new Date(),
-              }
-            });
-          }
         }
-        // Если нет серверов, никаких начислений не производим
+        
+        // Добавляем доход на баланс только если он больше нуля
+        if (incomeAmount > 0) {
+          dispatch({
+            type: 'SET_BALANCE',
+            payload: state.balance + incomeAmount
+          });
+          
+          // Добавляем транзакцию о начислении
+          const date = new Date();
+          const formattedDate = date.toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          
+          const incomeTransaction = {
+            id: Date.now(),
+            title: 'Доход от майнинга',
+            date: formattedDate,
+            amount: `+${incomeAmount.toFixed(8)} USDT`
+          };
+          
+          setTransactions(prev => {
+            const newTransactions = [incomeTransaction, ...prev];
+            localStorage.setItem('miningTransactions', JSON.stringify(newTransactions));
+            return newTransactions;
+          });
+          
+          // Добавляем в историю транзакций приложения
+          dispatch({
+            type: 'ADD_TRANSACTION',
+            payload: {
+              id: Date.now().toString(),
+              type: 'INCOME',
+              amount: incomeAmount,
+              description: 'Доход от майнинга',
+              timestamp: new Date(),
+            }
+          });
+        }
       }, 5000); // Доход начисляется каждые 5 секунд
     }
 
     return () => {
-      if (qualityInterval) clearInterval(qualityInterval);
       if (earningsInterval) clearInterval(earningsInterval);
     };
-  }, [isMining, dispatch, state.balance, state.rentedServers, networkQuality]);
+  }, [isMining, dispatch, state.balance, state.rentedServers]);
 
   // Сохраняем состояние майнинга в localStorage
   useEffect(() => {
@@ -531,17 +490,6 @@ const Mining: React.FC = () => {
     }
   };
 
-  // Вычисляем суммарный доход в час от всех серверов
-  const totalHourlyIncome = state.rentedServers.reduce(
-    (sum, server) => sum + server.hourlyIncome, 
-    0
-  );
-  
-  // Вычисляем общий доход (сумма всех транзакций дохода)
-  const totalIncome = state.transactions
-    .filter(t => t.type === 'INCOME')
-    .reduce((sum, t) => sum + t.amount, 0);
-
   return (
     <MiningContainer>
       <Notification 
@@ -557,24 +505,13 @@ const Mining: React.FC = () => {
         </EarningsAmount>
       </BonusCard>
       
-      <NetworkQualityCard>
-        <QualityHeader>
-          Качество: {networkQuality}%
-        </QualityHeader>
-        <QualityText>
-          {state.rentedServers.length > 0 
-            ? `Качество сети влияет на доходность. При текущем качестве сети ваш доход умножается на ${(networkQuality / 100).toFixed(2)}.` 
-            : 'Для начала майнинга необходимо арендовать хотя бы один сервер на странице "Аренда".'}
-        </QualityText>
-      </NetworkQualityCard>
-      
       <MiningStatusText>
-        {isMining ? 'Майнинг активен' : 'Майнинг не активен'}
+        {isMining ? 'Сервер активен' : 'Сервер не активен'}
       </MiningStatusText>
       
       <StatusCircle isMining={isMining} onClick={handleMiningClick}>
         <MiningIcon isMining={isMining}>
-          {isMining ? 'Stop' : 'Start'}
+          {isMining ? 'Стоп Сервер' : 'Старт Сервер'}
         </MiningIcon>
       </StatusCircle>
       
@@ -588,11 +525,13 @@ const Mining: React.FC = () => {
           </StatRow>
           <StatRow>
             <span>Общий доход:</span>
-            <span>{totalIncome.toFixed(8)} USDT</span>
+            <span>{state.transactions
+              .filter(t => t.type === 'INCOME')
+              .reduce((sum, t) => sum + t.amount, 0).toFixed(8)} USDT</span>
           </StatRow>
           <StatRow>
             <span>Доход в час:</span>
-            <span>{totalHourlyIncome.toFixed(8)} USDT</span>
+            <span>{state.rentedServers.reduce((sum, server) => sum + server.hourlyIncome, 0).toFixed(8)} USDT</span>
           </StatRow>
         </ServerStatsCard>
         

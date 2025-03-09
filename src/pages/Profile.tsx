@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useAppContext } from '../context/AppContext';
 import { getTransactionColor } from '../types/transaction';
 import Notification from '../components/Notification';
+import { formatDate } from '../utils/formatDate';
 
 const ProfileContainer = styled.div`
   padding: 20px;
@@ -205,24 +206,14 @@ const Balance = styled.div`
   max-width: 600px;
 `;
 
-const formatDate = (timestamp: number): string => {
-  const date = new Date(timestamp);
-  return date.toLocaleString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
-
-type Tab = 'servers' | 'transactions';
+type TransactionTabType = 'all' | 'income' | 'expense';
 
 const Profile: React.FC = () => {
   const { state } = useAppContext();
   const [showNotification, setShowNotification] = useState<boolean>(false);
   const [notificationMessage, setNotificationMessage] = useState<string>('');
   const [notificationType, setNotificationType] = useState<'success' | 'error'>('success');
+  const [activeTransactionTab, setActiveTransactionTab] = useState<TransactionTabType>('all');
   
   // Функция для отображения уведомлений
   const showNotificationMessage = (message: string, type: 'success' | 'error' = 'success') => {
@@ -242,6 +233,14 @@ const Profile: React.FC = () => {
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
   
+  // Фильтруем транзакции по выбранному табу
+  const filteredTransactions = sortedTransactions.filter(transaction => {
+    if (activeTransactionTab === 'all') return true;
+    if (activeTransactionTab === 'income') return transaction.type === 'INCOME';
+    if (activeTransactionTab === 'expense') return transaction.type === 'RENT';
+    return true;
+  });
+  
   return (
     <ProfileContainer>
       <Notification 
@@ -256,14 +255,35 @@ const Profile: React.FC = () => {
         Баланс: {state.balance.toFixed(8)} USDT
       </Balance>
       
-     
+      
       
       <ProfileSection>
         <SectionTitle>История транзакций</SectionTitle>
         
-        {sortedTransactions.length > 0 ? (
+        <TabContainer>
+          <TabButton 
+            active={activeTransactionTab === 'all'} 
+            onClick={() => setActiveTransactionTab('all')}
+          >
+            Все
+          </TabButton>
+          <TabButton 
+            active={activeTransactionTab === 'income'} 
+            onClick={() => setActiveTransactionTab('income')}
+          >
+            Доходы
+          </TabButton>
+          <TabButton 
+            active={activeTransactionTab === 'expense'} 
+            onClick={() => setActiveTransactionTab('expense')}
+          >
+            Расходы
+          </TabButton>
+        </TabContainer>
+        
+        {filteredTransactions.length > 0 ? (
           <TransactionsList>
-            {sortedTransactions.map((transaction) => (
+            {filteredTransactions.map((transaction) => (
               <TransactionItem key={transaction.id} type={transaction.type}>
                 <TransactionInfo>
                   <TransactionTitle>
@@ -287,7 +307,11 @@ const Profile: React.FC = () => {
             ))}
           </TransactionsList>
         ) : (
-          <EmptyMessage>У вас пока нет транзакций</EmptyMessage>
+          <EmptyMessage>
+            {activeTransactionTab === 'all' && 'У вас пока нет транзакций'}
+            {activeTransactionTab === 'income' && 'У вас пока нет доходных транзакций'}
+            {activeTransactionTab === 'expense' && 'У вас пока нет расходных транзакций'}
+          </EmptyMessage>
         )}
       </ProfileSection>
     </ProfileContainer>
