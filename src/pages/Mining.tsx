@@ -246,13 +246,13 @@ const Mining: React.FC = () => {
       </BonusCard>
 
       <StatusCircle isMining={isMining} onClick={handleMiningClick}>
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+        <svg width=" 40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
           <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
           <line x1="12" y1="2" x2="12" y2="12"></line>
         </svg>
       </StatusCircle>
 
-      <div style={{ textAlign: 'center', marginBottom: '0px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '-20px' }}>
         <h2>{isMining ? 'Server is Connected' : 'Server is Disconnected'}</h2>
       </div>
 
