@@ -252,11 +252,11 @@ const Mining: React.FC = () => {
         </svg>
       </StatusCircle>
 
-      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '12px' }}>
         <h2>{isMining ? 'Server is Connected' : 'Server is Disconnected'}</h2>
       </div>
 
-      <NetworkQualityCard>
+      <NetworkQualityCard style={{ marginTop: '12px' }}>
         <QualityHeader>
           Network Quality: {networkQuality}%
         </QualityHeader>
