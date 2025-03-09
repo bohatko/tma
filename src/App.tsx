@@ -11,7 +11,7 @@ import { useTelegram } from "./hooks/useTelegram";
 
 const AppWrapper = styled.div`
   min-height: 100vh;
-  background-color: var(--tg-theme-bg-color);
+  background-color: var(--tg-theme-bg-color, #FFFFFF);
   position: relative;
   overflow-y: auto;
 `;
@@ -20,7 +20,7 @@ const StyledApp = styled.div`
   padding: 20px;
   padding-bottom: 80px;
   min-height: 100vh;
-  background-color: var(--tg-theme-bg-color);
+  background-color: var(--tg-theme-bg-color, #FFFFFF);
 `;
 
 const Container = styled.div`
@@ -67,6 +67,8 @@ const UserName = styled.div`
 
 function App() {
   const { user, ready, error, webApp } = useTelegram();
+  // Изображение пользователя по умолчанию
+  const defaultUserImage = "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg";
 
   useEffect(() => {
     // Настраиваем цвета приложения в соответствии с темой Telegram
@@ -75,10 +77,13 @@ function App() {
       console.log('Telegram WebApp инициализирован:', webApp.initDataUnsafe);
 
       // Настройка цветов
-      document.documentElement.style.setProperty('--tg-theme-bg-color', webApp.themeParams.bg_color || '#f5f5f5');
+      document.documentElement.style.setProperty('--tg-theme-bg-color', webApp.themeParams.bg_color || '#FFFFFF');
       document.documentElement.style.setProperty('--tg-theme-text-color', webApp.themeParams.text_color || '#333333');
       document.documentElement.style.setProperty('--tg-theme-button-color', webApp.themeParams.button_color || '#0098E9');
       document.documentElement.style.setProperty('--tg-theme-button-text-color', webApp.themeParams.button_text_color || '#ffffff');
+    } else {
+      // Если WebApp не инициализирован, используем белый фон
+      document.documentElement.style.setProperty('--tg-theme-bg-color', '#FFFFFF');
     }
   }, [webApp]);
 
@@ -91,8 +96,8 @@ function App() {
               <UserInfoContainer>
                 {user && (
                   <>
-                    <UserAvatar bgUrl={user.photo_url}>
-                      {!user.photo_url && user.first_name.charAt(0).toUpperCase()}
+                    <UserAvatar bgUrl={user.photo_url || defaultUserImage}>
+                      {!user.photo_url && !defaultUserImage && user.first_name.charAt(0).toUpperCase()}
                     </UserAvatar>
                     <UserName>
                       {user.first_name} {user.last_name}
@@ -100,7 +105,14 @@ function App() {
                   </>
                 )}
                 {!user && !error && <UserName>Загрузка...</UserName>}
-                {error && <UserName>Гость</UserName>}
+                {error && (
+                  <>
+                    <UserAvatar bgUrl={defaultUserImage}>
+                      G
+                    </UserAvatar>
+                    <UserName>Гость</UserName>
+                  </>
+                )}
               </UserInfoContainer>
               <TonConnectButton />
             </HeaderContainer>
