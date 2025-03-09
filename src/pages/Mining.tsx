@@ -448,30 +448,28 @@ const Mining: React.FC = () => {
       </NetworkQualityCard>
 
       <TransactionCard>
-        <TransactionTitle>История операций</TransactionTitle>
+        <TransactionTitle>История майнинга</TransactionTitle>
         {transactions.length > 0 ? (
-          transactions.map((transaction) => (
-            <TransactionItem key={transaction.id}>
-              <TransactionLeft>
-                <TransactionIcon>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    {transaction.amount.startsWith('+') ? (
-                      <path d="M12 2v20M2 12h20"/>  // Плюс для поступлений
-                    ) : (
-                      <path d="M2 12h20"/>  // Минус для выводов
-                    )}
-                  </svg>
-                </TransactionIcon>
-                <TransactionInfo>
-                  <TransactionTitle>{transaction.title}</TransactionTitle>
-                  <TransactionDate>{transaction.date}</TransactionDate>
-                </TransactionInfo>
-              </TransactionLeft>
-              <TransactionAmount style={{ color: transaction.amount.startsWith('+') ? '#046611' : '#d32f2f' }}>
-                {transaction.amount}
-              </TransactionAmount>
-            </TransactionItem>
-          ))
+          transactions
+            .filter(transaction => transaction.title === 'Вознаграждение за майнинг')
+            .map((transaction) => (
+              <TransactionItem key={transaction.id}>
+                <TransactionLeft>
+                  <TransactionIcon>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 2v20M2 12h20"/>
+                    </svg>
+                  </TransactionIcon>
+                  <TransactionInfo>
+                    <TransactionTitle>{transaction.title}</TransactionTitle>
+                    <TransactionDate>{transaction.date}</TransactionDate>
+                  </TransactionInfo>
+                </TransactionLeft>
+                <TransactionAmount style={{ color: '#046611' }}>
+                  {transaction.amount}
+                </TransactionAmount>
+              </TransactionItem>
+            ))
         ) : (
           <TransactionItem>
             <TransactionInfo style={{ width: '100%' }}>
