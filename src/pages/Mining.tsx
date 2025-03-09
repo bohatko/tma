@@ -255,8 +255,8 @@ const Mining: React.FC = () => {
   const withdrawInputRef = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
-    let qualityInterval: NodeJS.Timeout;
-    let earningsInterval: NodeJS.Timeout;
+    let qualityInterval: NodeJS.Timeout | null = null;
+    let earningsInterval: NodeJS.Timeout | null = null;
 
     if (isMining) {
       console.log('Майнинг запущен, устанавливаем интервалы');
@@ -264,23 +264,25 @@ const Mining: React.FC = () => {
       // Обновляем качество сети
       qualityInterval = setInterval(() => {
         setNetworkQuality(Math.floor(Math.random() * (99 - 75 + 1)) + 75);
-      }, 1000);
+      }, 3000);
 
       // Начисляем вознаграждение и создаем транзакции
       earningsInterval = setInterval(() => {
         console.log('Начисляем вознаграждение');
         
-        const reward = networkQuality / 100;
-        
-        // Обновляем баланс
-        setEarnings(prev => {
-          const newEarnings = prev + reward;
-          localStorage.setItem('miningEarnings', newEarnings.toString());
-          return newEarnings;
-        });
-
-        // Создаем транзакцию начисления
-        const createTransaction = () => {
+        setNetworkQuality(prevQuality => {
+          // Получаем актуальное качество сети
+          const quality = prevQuality;
+          const reward = quality / 100;
+          
+          // Обновляем баланс
+          setEarnings(prev => {
+            const newEarnings = prev + reward;
+            localStorage.setItem('miningEarnings', newEarnings.toString());
+            return newEarnings;
+          });
+          
+          // Создаем транзакцию начисления
           const now = new Date();
           const formattedDate = now.toLocaleString('ru-RU', {
             year: 'numeric',
@@ -289,29 +291,27 @@ const Mining: React.FC = () => {
             hour: '2-digit',
             minute: '2-digit'
           });
-
+          
           const newTransaction = {
             id: Date.now(),
             title: 'Вознаграждение за майнинг',
             date: formattedDate,
             amount: `+${reward.toFixed(2)} USDT`
           };
-
+          
           console.log('Создаем транзакцию:', newTransaction);
           
           // Обновляем список транзакций
           setTransactions(prev => [newTransaction, ...prev.slice(0, 9)]);
-        };
-        
-        createTransaction();
+          
+          return quality;  // Возвращаем то же значение качества
+        });
       }, 5000); // 5 секунд
       
       console.log('Интервалы установлены:', { qualityInterval, earningsInterval });
-    } else {
-      console.log('Майнинг остановлен, очищаем интервалы');
     }
 
-    // Очищаем интервалы при размонтировании компонента
+    // Очищаем интервалы при размонтировании компонента или при остановке майнинга
     return () => {
       console.log('Очищаем интервалы');
       if (qualityInterval) {
@@ -323,7 +323,7 @@ const Mining: React.FC = () => {
         console.log('Интервал начислений очищен');
       }
     };
-  }, [isMining, networkQuality]);
+  }, [isMining]); // Зависимость только от isMining
 
   const showNotificationMessage = (message: string) => {
     setNotificationMessage(message);
@@ -432,8 +432,22 @@ const Mining: React.FC = () => {
         </svg>
       </StatusCircle>
 
-      <div style={{ textAlign: 'center', marginBottom: '-20px' }}>
-        <h2>{isMining ? 'Сервер подключен' : 'Сервер отключён'}</h2>
+      <div style={{ 
+        textAlign: 'center', 
+        marginBottom: '-10px', 
+        padding: '10px',
+        backgroundColor: isMining ? 'rgba(4, 102, 17, 0.1)' : 'rgba(255, 107, 107, 0.1)',
+        borderRadius: '8px',
+        width: '100%',
+        maxWidth: '300px'
+      }}>
+        <h2 style={{ 
+          margin: 0, 
+          color: isMining ? '#046611' : '#FF6B6B',
+          fontWeight: 'bold'
+        }}>
+          {isMining ? 'Сервер подключен' : 'Сервер отключён'}
+        </h2>
       </div>
 
       <NetworkQualityCard style={{ marginTop: '2px' }}>
