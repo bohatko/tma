@@ -108,6 +108,13 @@ const TransactionCard = styled.div`
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `;
 
+const TransactionTitle = styled.h3`
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 18px;
+  text-align: center;
+`;
+
 const TransactionItem = styled.div`
   display: flex;
   justify-content: space-between;
@@ -140,11 +147,6 @@ const TransactionIcon = styled.div`
 const TransactionInfo = styled.div`
   display: flex;
   flex-direction: column;
-`;
-
-const TransactionTitle = styled.div`
-  font-weight: 500;
-  color: #333;
 `;
 
 const TransactionDate = styled.div`
@@ -257,40 +259,69 @@ const Mining: React.FC = () => {
     let earningsInterval: NodeJS.Timeout;
 
     if (isMining) {
+      console.log('Майнинг запущен, устанавливаем интервалы');
+      
+      // Обновляем качество сети
       qualityInterval = setInterval(() => {
         setNetworkQuality(Math.floor(Math.random() * (99 - 75 + 1)) + 75);
       }, 1000);
 
+      // Начисляем вознаграждение и создаем транзакции
       earningsInterval = setInterval(() => {
+        console.log('Начисляем вознаграждение');
+        
         const reward = networkQuality / 100;
+        
+        // Обновляем баланс
         setEarnings(prev => {
           const newEarnings = prev + reward;
           localStorage.setItem('miningEarnings', newEarnings.toString());
           return newEarnings;
         });
 
-        // Добавляем новую транзакцию
-        const now = new Date();
-        const formattedDate = now.toLocaleString('ru-RU', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
+        // Создаем транзакцию начисления
+        const createTransaction = () => {
+          const now = new Date();
+          const formattedDate = now.toLocaleString('ru-RU', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
 
-        setTransactions(prev => [{
-          id: Date.now(),
-          title: 'Вознаграждение за майнинг',
-          date: formattedDate,
-          amount: `+${reward.toFixed(2)} USDT`
-        }, ...prev.slice(0, 9)]); // Храним только последние 10 транзакций
-      }, 5000); // Изменено с 1000 на 5000 (5 секунд)
+          const newTransaction = {
+            id: Date.now(),
+            title: 'Вознаграждение за майнинг',
+            date: formattedDate,
+            amount: `+${reward.toFixed(2)} USDT`
+          };
+
+          console.log('Создаем транзакцию:', newTransaction);
+          
+          // Обновляем список транзакций
+          setTransactions(prev => [newTransaction, ...prev.slice(0, 9)]);
+        };
+        
+        createTransaction();
+      }, 5000); // 5 секунд
+      
+      console.log('Интервалы установлены:', { qualityInterval, earningsInterval });
+    } else {
+      console.log('Майнинг остановлен, очищаем интервалы');
     }
 
+    // Очищаем интервалы при размонтировании компонента
     return () => {
-      if (qualityInterval) clearInterval(qualityInterval);
-      if (earningsInterval) clearInterval(earningsInterval);
+      console.log('Очищаем интервалы');
+      if (qualityInterval) {
+        clearInterval(qualityInterval);
+        console.log('Интервал качества очищен');
+      }
+      if (earningsInterval) {
+        clearInterval(earningsInterval);
+        console.log('Интервал начислений очищен');
+      }
     };
   }, [isMining, networkQuality]);
 
@@ -341,6 +372,8 @@ const Mining: React.FC = () => {
       return;
     }
     
+    console.log('Подтверждаем вывод:', amount);
+    
     // Уменьшаем баланс
     setEarnings(prev => {
       const newEarnings = prev - amount;
@@ -364,12 +397,17 @@ const Mining: React.FC = () => {
       minute: '2-digit'
     });
     
-    setTransactions(prev => [{
+    const withdrawTransaction = {
       id: Date.now(),
       title: 'Вывод средств',
       date: formattedDate,
       amount: `-${amount.toFixed(2)} USDT`
-    }, ...prev.slice(0, 9)]); // Храним только последние 10 транзакций
+    };
+    
+    console.log('Создаем транзакцию вывода:', withdrawTransaction);
+    
+    // Обновляем список транзакций
+    setTransactions(prev => [withdrawTransaction, ...prev]);
   };
 
   return (
@@ -410,6 +448,7 @@ const Mining: React.FC = () => {
       </NetworkQualityCard>
 
       <TransactionCard>
+        <TransactionTitle>История операций</TransactionTitle>
         {transactions.length > 0 ? (
           transactions.map((transaction) => (
             <TransactionItem key={transaction.id}>
@@ -435,8 +474,8 @@ const Mining: React.FC = () => {
           ))
         ) : (
           <TransactionItem>
-            <TransactionInfo>
-              <TransactionTitle style={{ textAlign: 'center', width: '100%' }}>
+            <TransactionInfo style={{ width: '100%' }}>
+              <TransactionTitle style={{ textAlign: 'center', width: '100%', fontSize: '16px' }}>
                 Нет транзакций
               </TransactionTitle>
             </TransactionInfo>

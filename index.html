@@ -6,9 +6,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ton Sample TWA</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+      // Перехватываем console.log для отображения в мобильном браузере
+      (function() {
+        if (typeof console != "undefined") {
+          if (typeof console.log != 'undefined') {
+            console.originalLog = console.log;
+          }
+        }
+        
+        console.log = function() {
+          console.originalLog.apply(console, arguments);
+          
+          var output = document.getElementById("debug-output");
+          if (output) {
+            var args = Array.prototype.slice.call(arguments);
+            var message = args.map(function(arg) {
+              return typeof arg === 'object' ? JSON.stringify(arg) : arg;
+            }).join(" ");
+            
+            var div = document.createElement("div");
+            div.style.borderBottom = "1px solid #ccc";
+            div.style.padding = "4px 0";
+            div.textContent = message;
+            output.appendChild(div);
+            
+            // Ограничиваем количество сообщений
+            if (output.children.length > 50) {
+              output.removeChild(output.firstChild);
+            }
+            
+            // Прокручиваем вниз
+            output.scrollTop = output.scrollHeight;
+          }
+        };
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Отладочная консоль, отображается только в режиме разработки -->
+    <div id="debug-console" style="position: fixed; bottom: 0; left: 0; right: 0; max-height: 200px; background: rgba(0,0,0,0.8); color: white; font-family: monospace; font-size: 12px; z-index: 9999; overflow-y: auto; display: none;">
+      <div style="padding: 4px; border-bottom: 1px solid #666; display: flex; justify-content: space-between;">
+        <span>Debug Console</span>
+        <button onclick="document.getElementById('debug-output').innerHTML = ''" style="background: none; border: none; color: white; cursor: pointer;">Clear</button>
+      </div>
+      <div id="debug-output" style="padding: 4px; max-height: 176px; overflow-y: auto;"></div>
+    </div>
+    <script>
+      // Показываем консоль только в режиме разработки
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        document.getElementById('debug-console').style.display = 'block';
+      }
+    </script>
   </body>
 </html>
