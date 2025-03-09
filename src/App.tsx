@@ -1,54 +1,53 @@
 import "./App.css";
 import { TonConnectButton } from "@tonconnect/ui-react";
-import { Counter } from "./components/Counter";
-import { Jetton } from "./components/Jetton";
-import { TransferTon } from "./components/TransferTon";
 import styled from "styled-components";
-import { Button, FlexBoxCol, FlexBoxRow } from "./components/styled/styled";
-import { useTonConnect } from "./hooks/useTonConnect";
-import { CHAIN } from "@tonconnect/protocol";
-import "@twa-dev/sdk";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Mining from './pages/Mining';
+import Store from './pages/Store';
+import Profile from './pages/Profile';
+import BottomNavigation from './components/BottomNavigation';
 
-const StyledApp = styled.div`
-  background-color: #e8e8e8;
-  color: black;
-
-  @media (prefers-color-scheme: dark) {
-    background-color: #222;
-    color: white;
-  }
+const AppWrapper = styled.div`
   min-height: 100vh;
-  padding: 20px 20px;
+  background-color: #f5f5f5;
+  position: relative;
+  overflow-y: auto;
 `;
 
-const AppContainer = styled.div`
+const StyledApp = styled.div`
+  padding: 20px;
+  padding-bottom: 80px;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+`;
+
+const Container = styled.div`
   max-width: 900px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 `;
 
 function App() {
-  const { network } = useTonConnect();
-
   return (
-    <StyledApp>
-      <AppContainer>
-        <FlexBoxCol>
-          <FlexBoxRow>
-            <TonConnectButton />
-            <Button>
-              {network
-                ? network === CHAIN.MAINNET
-                  ? "mainnet"
-                  : "testnet"
-                : "N/A"}
-            </Button>
-          </FlexBoxRow>
-          <Counter />
-          <TransferTon />
-          <Jetton />
-        </FlexBoxCol>
-      </AppContainer>
-    </StyledApp>
+    <Router>
+      <AppWrapper>
+        <StyledApp>
+          <Container>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+              <TonConnectButton />
+            </div>
+            <Routes>
+              <Route path="/" element={<Navigate to="/mining" replace />} />
+              <Route path="/mining" element={<Mining />} />
+              <Route path="/store" element={<Store />} />
+              <Route path="/profile" element={<Profile />} />
+            </Routes>
+          </Container>
+          <BottomNavigation />
+        </StyledApp>
+      </AppWrapper>
+    </Router>
   );
 }
 
