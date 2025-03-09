@@ -13,7 +13,7 @@ const StoreContainer = styled.div`
 const Store: React.FC = () => {
   return (
     <StoreContainer>
-      <h1>Store</h1>
+      <h1>Магазин</h1>
     </StoreContainer>
   );
 };

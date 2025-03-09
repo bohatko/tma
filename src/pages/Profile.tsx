@@ -13,7 +13,7 @@ const ProfileContainer = styled.div`
 const Profile: React.FC = () => {
   return (
     <ProfileContainer>
-      <h1>Profile</h1>
+      <h1>Профиль</h1>
     </ProfileContainer>
   );
 };

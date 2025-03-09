@@ -223,13 +223,12 @@ const Mining: React.FC = () => {
 
   const handleMiningClick = () => {
     setIsMining(prev => {
-      const newState = !prev;
-      if (newState) {
-        showNotificationMessage('Майнинг успешно начат');
+      if (!prev) {
+        showNotificationMessage('Майнинг запущен');
       } else {
-        showNotificationMessage('Майнинг приостановлен');
+        showNotificationMessage('Майнинг остановлен');
       }
-      return newState;
+      return !prev;
     });
   };
 
@@ -238,7 +237,7 @@ const Mining: React.FC = () => {
       <Notification show={showNotification} message={notificationMessage} />
       
       <BonusCard>
-        <h2>Rewards:</h2>
+        <h2>Ваш доход:</h2>
         <EarningsAmount>
           <>USDT </>
           {earnings.toFixed(2)}
@@ -253,17 +252,17 @@ const Mining: React.FC = () => {
       </StatusCircle>
 
       <div style={{ textAlign: 'center', marginBottom: '-20px' }}>
-        <h2>{isMining ? 'Server is Connected' : 'Server is Disconnected'}</h2>
+        <h2>{isMining ? 'Сервер подключен' : 'Сервер отключён'}</h2>
       </div>
 
       <NetworkQualityCard style={{ marginTop: '2px' }}>
         <QualityHeader>
-          Network Quality: {networkQuality}%
+          Качество сети: {networkQuality}%
         </QualityHeader>
         <QualityText>
           {isMining 
-            ? "You're doing great! Keep connected to this network to earn."
-            : "Connect to start earning with this network."}
+            ? "Отлично! Оставайтесь подключенными к сети для получения дохода."
+            : "Подключитесь, чтобы начать зарабатывать в этой сети."}
         </QualityText>
       </NetworkQualityCard>
 
@@ -278,7 +277,7 @@ const Mining: React.FC = () => {
                   </svg>
                 </TransactionIcon>
                 <TransactionInfo>
-                  <TransactionTitle>{transaction.title}</TransactionTitle>
+                  <TransactionTitle>{transaction.title === 'Mining Reward' ? 'Вознаграждение за майнинг' : transaction.title}</TransactionTitle>
                   <TransactionDate>{transaction.date}</TransactionDate>
                 </TransactionInfo>
               </TransactionLeft>

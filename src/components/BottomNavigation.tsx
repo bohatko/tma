@@ -48,7 +48,7 @@ const BottomNavigation: React.FC = () => {
           <path d="M17 8l-5-5-5 5"></path>
           <path d="M8 14l4 4 4-4"></path>
         </svg>
-        Mining
+        Майнинг
       </NavItem>
       
       <NavItem 
@@ -59,7 +59,7 @@ const BottomNavigation: React.FC = () => {
           <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
           <line x1="3" y1="6" x2="21" y2="6"></line>
         </svg>
-        Store
+        Магазин
       </NavItem>
       
       <NavItem 
@@ -70,7 +70,7 @@ const BottomNavigation: React.FC = () => {
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
-        Profile
+        Профиль
       </NavItem>
     </NavContainer>
   );
