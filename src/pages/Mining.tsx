@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import Notification from '../components/Notification';
+import { useAppContext } from '../context/AppContext';
+import { formatDate } from '../utils/formatDate';
 
 const MiningContainer = styled.div`
   padding: 20px;
@@ -13,29 +15,29 @@ const MiningContainer = styled.div`
 `;
 
 const BonusCard = styled.div`
-  background: #0098E9;
+  background-color: #0098E9;
+  color: white;
   padding: 15px 25px;
   border-radius: 12px;
+  margin: 20px 0;
   width: 110%;
   max-width: 600px;
+  transition: transform 0.3s ease;
   text-align: center;
-  color: white;
-
+  
   h2 {
+    font-size: 24px;
     color: white;
     margin: 0;
   }
 `;
 
 const EarningsAmount = styled.div`
-  font-size: 30px;
+  font-size: 36px;
   font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin: 15px 0;
   color: white;
+  margin-top: 5px;
+  text-align: center;
 `;
 
 const CoinIcon = styled.div`
@@ -49,36 +51,35 @@ const CoinIcon = styled.div`
 `;
 
 const StatusCircle = styled.div<{ isMining: boolean }>`
-  width: 120px;
-  height: 120px;
-  background: ${props => props.isMining ? '#046611' : '#FF6B6B'};
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
+  background-color: ${props => props.isMining ? '#0098E9' : '#000000'};
   display: flex;
-  align-items: center;
   justify-content: center;
-  margin: 32px 0 0 0;
+  align-items: center;
+  margin: 30px auto;
   cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-
+  transition: transform 0.2s ease, background-color 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
   &:hover {
     transform: scale(1.05);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   }
-
+  
   &:active {
     transform: scale(0.95);
   }
 `;
 
 const NetworkQualityCard = styled.div`
-  background: #0098E9;
+  background-color: #0098E9;
   padding: 15px 25px;
   border-radius: 12px;
+  margin: 20px 0;
   width: 110%;
   max-width: 600px;
   color: white;
-  margin-top: 32px;
 `;
 
 const QualityHeader = styled.div`
@@ -110,20 +111,41 @@ const TransactionCard = styled.div`
 
 const TransactionTitle = styled.h3`
   margin: 0 0 10px 0;
-  color: #333;
   font-size: 18px;
-  text-align: center;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
 `;
 
 const TransactionItem = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #EEEEEE;
-
+  padding: 10px;
+  border-bottom: 1px solid #f5f5f5;
+  
   &:last-child {
     border-bottom: none;
+  }
+  
+  div:first-child {
+    div:first-child {
+      font-weight: 500;
+      color: #333;
+    }
+    
+    div:last-child {
+      font-size: 12px;
+      color: #999;
+    }
+  }
+  
+  div:last-child {
+    font-weight: 600;
+    color: #4CAF50;
+    
+    &[data-negative="true"] {
+      color: #F44336;
+    }
   }
 `;
 
@@ -160,21 +182,21 @@ const TransactionAmount = styled.div`
 `;
 
 const WithdrawButton = styled.button`
-  background-color: var(--tg-theme-button-color, #0098E9);
-  color: white;
+  background-color: white;
+  color: #0098E9;
   border: none;
-  border-radius: 8px;
   padding: 10px 20px;
-  font-size: 16px;
-  font-weight: 500;
-  margin-top: 10px;
+  border-radius: 8px;
+  font-weight: bold;
   cursor: pointer;
-  transition: all 0.3s ease;
-
+  transition: all 0.2s ease;
+  margin: 15px auto;
+  display: block;
+  
   &:hover {
-    opacity: 0.9;
+    background-color: #f0f0f0;
   }
-
+  
   &:active {
     transform: scale(0.95);
   }
@@ -233,15 +255,146 @@ const AlertButton = styled.button<{ primary?: boolean }>`
   cursor: pointer;
 `;
 
+const MiningIcon = styled.div<{ isMining: boolean }>`
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  text-transform: uppercase;
+`;
+
+const MiningStatusText = styled.div`
+  text-align: center;
+  margin: 10px 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: ${props => props.children === 'Майнинг активен' ? '#0098E9' : '#000000'};
+`;
+
+const TransactionHistory = styled.div`
+  width: 100%;
+  max-width: 600px;
+  margin-top: 20px;
+  padding: 15px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+`;
+
+const TransactionList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+`;
+
+const ServerSection = styled.div`
+  width: 100%;
+  max-width: 600px;
+  margin-top: 20px;
+`;
+
+const SectionTitle = styled.h2`
+  font-size: 22px;
+  margin: 15px 0;
+  color: #333;
+  text-align: center;
+  font-weight: 600;
+`;
+
+const ServerStatsCard = styled.div`
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  margin-bottom: 20px;
+`;
+
+const StatRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+  
+  &:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+  
+  span:first-child {
+    color: #666;
+  }
+  
+  span:last-child {
+    font-weight: 500;
+    color: #333;
+  }
+`;
+
+const ServersList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const ServerCard = styled.div`
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+`;
+
+const ServerHeader = styled.div`
+  background-color: #0098E9;
+  color: white;
+  padding: 10px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const ServerName = styled.div`
+  font-weight: 600;
+  font-size: 16px;
+`;
+
+const ServerContent = styled.div`
+  padding: 10px 15px;
+`;
+
+const ServerStat = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-size: 14px;
+  
+  span:first-child {
+    color: #666;
+  }
+  
+  span:last-child {
+    font-weight: 500;
+    color: #333;
+  }
+`;
+
+const EmptyMessage = styled.div`
+  text-align: center;
+  color: #999;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  font-style: italic;
+`;
+
 const Mining: React.FC = () => {
   const [isMining, setIsMining] = useState<boolean>(false);
   const [networkQuality, setNetworkQuality] = useState<number>(75);
-  const [earnings, setEarnings] = useState<number>(() => {
-    const savedEarnings = localStorage.getItem('miningEarnings');
-    return savedEarnings ? parseFloat(savedEarnings) : 0;
-  });
+  const { state, dispatch } = useAppContext();
   const [showNotification, setShowNotification] = useState<boolean>(false);
   const [notificationMessage, setNotificationMessage] = useState<string>('');
+  const [notificationType, setNotificationType] = useState<'success' | 'error'>('success');
   const [transactions, setTransactions] = useState<Array<{
     id: number;
     title: string;
@@ -249,273 +402,230 @@ const Mining: React.FC = () => {
     amount: string;
   }>>([]);
   
-  // Новые состояния для модального окна вывода средств
-  const [showWithdrawAlert, setShowWithdrawAlert] = useState<boolean>(false);
-  const [withdrawAmount, setWithdrawAmount] = useState<string>('');
-  const withdrawInputRef = useRef<HTMLInputElement>(null);
-  
+  useEffect(() => {
+    // Инициализация состояния майнинга
+    const storedMiningState = localStorage.getItem('isMining');
+    if (storedMiningState === 'true') {
+      setIsMining(true);
+    }
+    
+    // Загрузка транзакций из локального хранилища
+    const storedTransactions = localStorage.getItem('miningTransactions');
+    if (storedTransactions) {
+      setTransactions(JSON.parse(storedTransactions));
+    }
+  }, []);
+
   useEffect(() => {
     let qualityInterval: NodeJS.Timeout | null = null;
     let earningsInterval: NodeJS.Timeout | null = null;
 
     if (isMining) {
-      console.log('Майнинг запущен, устанавливаем интервалы');
-      
-      // Обновляем качество сети
+      // Обновление качества сети с интервалом
       qualityInterval = setInterval(() => {
-        setNetworkQuality(Math.floor(Math.random() * (99 - 75 + 1)) + 75);
+        const randomQuality = Math.floor(Math.random() * 30) + 70;
+        setNetworkQuality(randomQuality);
       }, 3000);
 
-      // Начисляем вознаграждение и создаем транзакции
+      // Добавление дохода с интервалом
       earningsInterval = setInterval(() => {
-        console.log('Начисляем вознаграждение');
+        // Рассчитываем доход на основе арендованных серверов
+        let incomeAmount = 0;
         
-        setNetworkQuality(prevQuality => {
-          // Получаем актуальное качество сети
-          const quality = prevQuality;
-          const reward = quality / 100;
+        // Проверяем наличие арендованных серверов
+        if (state.rentedServers.length > 0) {
+          // Суммируем почасовой доход всех серверов
+          const hourlyIncome = state.rentedServers.reduce(
+            (sum, server) => sum + server.hourlyIncome, 
+            0
+          );
           
-          // Обновляем баланс
-          setEarnings(prev => {
-            const newEarnings = prev + reward;
-            localStorage.setItem('miningEarnings', newEarnings.toString());
-            return newEarnings;
-          });
+          // Переводим часовой доход в доход за 5 секунд
+          // (hourlyIncome / 3600) * 5 = hourlyIncome * 5 / 3600
+          incomeAmount = hourlyIncome * 5 / 3600;
           
-          // Создаем транзакцию начисления
-          const now = new Date();
-          const formattedDate = now.toLocaleString('ru-RU', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-          });
+          // Применяем множитель качества сети (от 0.7 до 1.0)
+          const qualityMultiplier = networkQuality / 100;
+          incomeAmount = incomeAmount * qualityMultiplier;
           
-          const newTransaction = {
-            id: Date.now(),
-            title: 'Вознаграждение за майнинг',
-            date: formattedDate,
-            amount: `+${reward.toFixed(2)} USDT`
-          };
-          
-          console.log('Создаем транзакцию:', newTransaction);
-          
-          // Обновляем список транзакций
-          setTransactions(prev => [newTransaction, ...prev.slice(0, 9)]);
-          
-          return quality;  // Возвращаем то же значение качества
-        });
-      }, 5000); // 5 секунд
-      
-      console.log('Интервалы установлены:', { qualityInterval, earningsInterval });
+          // Добавляем доход на баланс только если он больше нуля
+          if (incomeAmount > 0) {
+            dispatch({
+              type: 'SET_BALANCE',
+              payload: state.balance + incomeAmount
+            });
+            
+            // Добавляем транзакцию о начислении
+            const date = new Date();
+            const formattedDate = date.toLocaleString('ru-RU', {
+              day: '2-digit',
+              month: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            
+            const incomeTransaction = {
+              id: Date.now(),
+              title: 'Доход от майнинга',
+              date: formattedDate,
+              amount: `+${incomeAmount.toFixed(8)} USDT`
+            };
+            
+            setTransactions(prev => {
+              const newTransactions = [incomeTransaction, ...prev];
+              localStorage.setItem('miningTransactions', JSON.stringify(newTransactions));
+              return newTransactions;
+            });
+            
+            // Добавляем в историю транзакций приложения
+            dispatch({
+              type: 'ADD_TRANSACTION',
+              payload: {
+                id: Date.now().toString(),
+                type: 'INCOME',
+                amount: incomeAmount,
+                description: 'Доход от майнинга',
+                timestamp: new Date(),
+              }
+            });
+          }
+        }
+        // Если нет серверов, никаких начислений не производим
+      }, 5000); // Доход начисляется каждые 5 секунд
     }
 
-    // Очищаем интервалы при размонтировании компонента или при остановке майнинга
     return () => {
-      console.log('Очищаем интервалы');
-      if (qualityInterval) {
-        clearInterval(qualityInterval);
-        console.log('Интервал качества очищен');
-      }
-      if (earningsInterval) {
-        clearInterval(earningsInterval);
-        console.log('Интервал начислений очищен');
-      }
+      if (qualityInterval) clearInterval(qualityInterval);
+      if (earningsInterval) clearInterval(earningsInterval);
     };
-  }, [isMining]); // Зависимость только от isMining
+  }, [isMining, dispatch, state.balance, state.rentedServers, networkQuality]);
 
-  const showNotificationMessage = (message: string) => {
+  // Сохраняем состояние майнинга в localStorage
+  useEffect(() => {
+    localStorage.setItem('isMining', isMining.toString());
+  }, [isMining]);
+
+  // Показываем уведомление
+  const showNotificationMessage = (message: string, type: 'success' | 'error' = 'success') => {
     setNotificationMessage(message);
+    setNotificationType(type);
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 3000);
   };
 
+  // Обработка нажатия на кнопку майнинга
   const handleMiningClick = () => {
-    setIsMining(prev => {
-      if (!prev) {
-        showNotificationMessage('Майнинг запущен');
-      } else {
-        showNotificationMessage('Майнинг остановлен');
-      }
-      return !prev;
-    });
-  };
-  
-  // Обработчик нажатия на кнопку "Вывести"
-  const handleWithdrawClick = () => {
-    setWithdrawAmount('');
-    setShowWithdrawAlert(true);
-    // Фокусируемся на поле ввода после открытия модального окна
-    setTimeout(() => {
-      if (withdrawInputRef.current) {
-        withdrawInputRef.current.focus();
-      }
-    }, 100);
-  };
-  
-  // Обработчик нажатия на кнопку "Отмена"
-  const handleWithdrawCancel = () => {
-    setShowWithdrawAlert(false);
-  };
-  
-  // Обработчик нажатия на кнопку "Подтвердить вывод"
-  const handleWithdrawConfirm = () => {
-    const amount = parseFloat(withdrawAmount);
-    if (isNaN(amount) || amount <= 0) {
-      showNotificationMessage('Пожалуйста, введите корректную сумму');
+    // Проверяем наличие арендованных серверов
+    if (!isMining && state.rentedServers.length === 0) {
+      showNotificationMessage('Для начала майнинга необходимо арендовать сервер', 'error');
       return;
     }
     
-    if (amount > earnings) {
-      showNotificationMessage('Недостаточно средств');
-      return;
+    const newMiningState = !isMining;
+    setIsMining(newMiningState);
+    
+    if (newMiningState) {
+      showNotificationMessage('Майнинг запущен', 'success');
+    } else {
+      showNotificationMessage('Майнинг остановлен', 'error');
     }
-    
-    console.log('Подтверждаем вывод:', amount);
-    
-    // Уменьшаем баланс
-    setEarnings(prev => {
-      const newEarnings = prev - amount;
-      localStorage.setItem('miningEarnings', newEarnings.toString());
-      return newEarnings;
-    });
-    
-    // Закрываем модальное окно
-    setShowWithdrawAlert(false);
-    
-    // Показываем уведомление об успешном выводе
-    showNotificationMessage('Заявка успешно обработана');
-    
-    // Добавляем транзакцию вывода
-    const now = new Date();
-    const formattedDate = now.toLocaleString('ru-RU', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    
-    const withdrawTransaction = {
-      id: Date.now(),
-      title: 'Вывод средств',
-      date: formattedDate,
-      amount: `-${amount.toFixed(2)} USDT`
-    };
-    
-    console.log('Создаем транзакцию вывода:', withdrawTransaction);
-    
-    // Обновляем список транзакций
-    setTransactions(prev => [withdrawTransaction, ...prev]);
   };
+
+  // Вычисляем суммарный доход в час от всех серверов
+  const totalHourlyIncome = state.rentedServers.reduce(
+    (sum, server) => sum + server.hourlyIncome, 
+    0
+  );
+  
+  // Вычисляем общий доход (сумма всех транзакций дохода)
+  const totalIncome = state.transactions
+    .filter(t => t.type === 'INCOME')
+    .reduce((sum, t) => sum + t.amount, 0);
 
   return (
     <MiningContainer>
-      <Notification show={showNotification} message={notificationMessage} />
+      <Notification 
+        show={showNotification}
+        message={notificationMessage}
+        type={notificationType}
+      />
       
       <BonusCard>
-        <h2>Ваш доход:</h2>
+        <h2>Ваш баланс:</h2>
         <EarningsAmount>
-          <>USDT </>
-          {earnings.toFixed(2)}
+          USDT {state.balance.toFixed(8)}
         </EarningsAmount>
-        <WithdrawButton onClick={handleWithdrawClick}>
-          Вывести
-        </WithdrawButton>
       </BonusCard>
-
-      <StatusCircle isMining={isMining} onClick={handleMiningClick}>
-        <svg width=" 40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-          <line x1="12" y1="2" x2="12" y2="12"></line>
-        </svg>
-      </StatusCircle>
-
-      <div style={{ 
-        textAlign: 'center', 
-        marginBottom: '-10px', 
-        padding: '10px',
-        backgroundColor: isMining ? 'rgba(4, 102, 17, 0.1)' : 'rgba(255, 107, 107, 0.1)',
-        borderRadius: '8px',
-        width: '100%',
-        maxWidth: '300px'
-      }}>
-        <h2 style={{ 
-          margin: 0, 
-          color: isMining ? '#046611' : '#FF6B6B',
-          fontWeight: 'bold',
-          fontSize: '16px'
-        }}>
-          {isMining ? 'Сервер подключен' : 'Сервер отключён'}
-        </h2>
-      </div>
-
-      <NetworkQualityCard style={{ marginTop: '2px' }}>
+      
+      <NetworkQualityCard>
         <QualityHeader>
-          Качество сети: {networkQuality}%
+          Качество: {networkQuality}%
         </QualityHeader>
         <QualityText>
-          {isMining 
-            ? "Отлично! Оставайтесь подключенными к сети для получения дохода."
-            : "Подключитесь, чтобы начать зарабатывать в этой сети."}
+          {state.rentedServers.length > 0 
+            ? `Качество сети влияет на доходность. При текущем качестве сети ваш доход умножается на ${(networkQuality / 100).toFixed(2)}.` 
+            : 'Для начала майнинга необходимо арендовать хотя бы один сервер на странице "Аренда".'}
         </QualityText>
       </NetworkQualityCard>
-
-      <TransactionCard>
-        <TransactionTitle>История майнинга</TransactionTitle>
-        {transactions.length > 0 ? (
-          transactions
-            .filter(transaction => transaction.title === 'Вознаграждение за майнинг')
-            .map((transaction) => (
-              <TransactionItem key={transaction.id}>
-                <TransactionLeft>
-                  <TransactionIcon>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 2v20M2 12h20"/>
-                    </svg>
-                  </TransactionIcon>
-                  <TransactionInfo>
-                    <TransactionTitle style={{ fontSize: '14px' }}>{transaction.title}</TransactionTitle>
-                    <TransactionDate>{transaction.date}</TransactionDate>
-                  </TransactionInfo>
-                </TransactionLeft>
-                <TransactionAmount style={{ color: '#046611' }}>
-                  {transaction.amount}
-                </TransactionAmount>
-              </TransactionItem>
-            ))
-        ) : (
-          <TransactionItem>
-            <TransactionInfo style={{ width: '100%' }}>
-              <TransactionTitle style={{ textAlign: 'center', width: '100%', fontSize: '12px' }}>
-                Нет транзакций
-              </TransactionTitle>
-            </TransactionInfo>
-          </TransactionItem>
-        )}
-      </TransactionCard>
       
-      {/* Модальное окно для вывода средств */}
-      <AlertOverlay show={showWithdrawAlert}>
-        <AlertCard>
-          <AlertTitle>Вывод средств</AlertTitle>
-          <AlertInput 
-            ref={withdrawInputRef}
-            type="number" 
-            placeholder="Введите сумму" 
-            value={withdrawAmount} 
-            onChange={(e) => setWithdrawAmount(e.target.value)}
-            min="0.01"
-            max={earnings.toString()}
-            step="0.01"
-          />
-          <AlertButtonGroup>
-            <AlertButton onClick={handleWithdrawCancel}>Отмена</AlertButton>
-            <AlertButton primary onClick={handleWithdrawConfirm}>Подтвердить вывод</AlertButton>
-          </AlertButtonGroup>
-        </AlertCard>
-      </AlertOverlay>
+      <MiningStatusText>
+        {isMining ? 'Майнинг активен' : 'Майнинг не активен'}
+      </MiningStatusText>
+      
+      <StatusCircle isMining={isMining} onClick={handleMiningClick}>
+        <MiningIcon isMining={isMining}>
+          {isMining ? 'Stop' : 'Start'}
+        </MiningIcon>
+      </StatusCircle>
+      
+      <ServerSection>
+        <SectionTitle>Серверы</SectionTitle>
+        
+        <ServerStatsCard>
+          <StatRow>
+            <span>Всего серверов:</span>
+            <span>{state.rentedServers.length}</span>
+          </StatRow>
+          <StatRow>
+            <span>Общий доход:</span>
+            <span>{totalIncome.toFixed(8)} USDT</span>
+          </StatRow>
+          <StatRow>
+            <span>Доход в час:</span>
+            <span>{totalHourlyIncome.toFixed(8)} USDT</span>
+          </StatRow>
+        </ServerStatsCard>
+        
+        <SectionTitle>Арендованные серверы</SectionTitle>
+        
+        {state.rentedServers.length > 0 ? (
+          <ServersList>
+            {state.rentedServers.map(server => (
+              <ServerCard key={server.id}>
+                <ServerHeader>
+                  <ServerName>{server.name}</ServerName>
+                </ServerHeader>
+                <ServerContent>
+                  <ServerStat>
+                    <span>Стоимость:</span>
+                    <span>{server.price} USDT</span>
+                  </ServerStat>
+                  <ServerStat>
+                    <span>Доход в час:</span>
+                    <span>{server.hourlyIncome.toFixed(8)} USDT</span>
+                  </ServerStat>
+                  <ServerStat>
+                    <span>Дата аренды:</span>
+                    <span>{formatDate(server.rentDate)}</span>
+                  </ServerStat>
+                </ServerContent>
+              </ServerCard>
+            ))}
+          </ServersList>
+        ) : (
+          <EmptyMessage>У вас пока нет арендованных серверов</EmptyMessage>
+        )}
+      </ServerSection>
     </MiningContainer>
   );
 };

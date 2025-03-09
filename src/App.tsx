@@ -6,8 +6,10 @@ import Mining from './pages/Mining';
 import Store from './pages/Store';
 import Profile from './pages/Profile';
 import BottomNavigation from './components/BottomNavigation';
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useTelegram } from "./hooks/useTelegram";
+import { AppContextProvider } from "./context/AppContext";
+import Notification from "./components/Notification";
 
 const AppWrapper = styled.div`
   min-height: 100vh;
@@ -65,9 +67,8 @@ const UserName = styled.div`
   color: #333;
 `;
 
-function App() {
+const AppContent = () => {
   const { user, ready, error, webApp } = useTelegram();
-  // Изображение пользователя по умолчанию
   const defaultUserImage = "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg";
 
   useEffect(() => {
@@ -127,6 +128,14 @@ function App() {
         </StyledApp>
       </AppWrapper>
     </Router>
+  );
+}
+
+function App() {
+  return (
+    <AppContextProvider>
+      <AppContent />
+    </AppContextProvider>
   );
 }
 

@@ -44,9 +44,10 @@ const BottomNavigation: React.FC = () => {
         onClick={() => navigate('/mining')}
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M12 3v19"></path>
-          <path d="M17 8l-5-5-5 5"></path>
-          <path d="M8 14l4 4 4-4"></path>
+          <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+          <polyline points="17 2 12 7 7 2"></polyline>
+          <line x1="12" y1="12" x2="12" y2="17"></line>
+          <line x1="8" y1="12" x2="16" y2="12"></line>
         </svg>
         Майнинг
       </NavItem>
@@ -59,7 +60,7 @@ const BottomNavigation: React.FC = () => {
           <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
           <line x1="3" y1="6" x2="21" y2="6"></line>
         </svg>
-        Магазин
+        Аренда
       </NavItem>
       
       <NavItem 
