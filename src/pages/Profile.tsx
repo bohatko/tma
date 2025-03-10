@@ -12,17 +12,18 @@ const ProfileContainer = styled.div`
   align-items: center;
   min-height: calc(100vh - 140px);
   background-color: var(--tg-theme-bg-color, #FFFFFF);
+  width: 100%;
 `;
 
 const ProfileTitle = styled.h1`
   margin-bottom: 20px;
   color: var(--tg-theme-text-color, #333);
   text-align: center;
+  width: 100%;
 `;
 
 const ProfileSection = styled.div`
   width: 100%;
-  max-width: 600px;
   margin-bottom: 30px;
 `;
 
@@ -43,6 +44,7 @@ const UserInfoCard = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
 `;
 
 const UserInfoRow = styled.div`
@@ -170,7 +172,6 @@ const EmptyMessage = styled.div`
 const TabContainer = styled.div`
   display: flex;
   width: 100%;
-  max-width: 600px;
   margin-bottom: 20px;
   border-radius: 8px;
   overflow: hidden;
@@ -203,7 +204,6 @@ const Balance = styled.div`
   font-weight: 600;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 600px;
 `;
 
 type TransactionTabType = 'all' | 'income' | 'expense';
@@ -287,15 +287,16 @@ const Profile: React.FC = () => {
               <TransactionItem key={transaction.id} type={transaction.type}>
                 <TransactionInfo>
                   <TransactionTitle>
-                    {transaction.type === 'RENT' ? 'Аренда сервера' : 'Доход от сервера'} 
-                    {transaction.serverName && ` - ${transaction.serverName}`}
+                    {transaction.type === 'RENT' 
+                      ? `Аренда сервера ${transaction.serverName ? transaction.serverName : ''}` 
+                      : `Доход от сервера ${transaction.serverName ? transaction.serverName : ''}`} 
                   </TransactionTitle>
                   <TransactionDate>
                     {new Date(transaction.timestamp).toLocaleString('ru-RU')}
                   </TransactionDate>
                   {transaction.serverId && (
                     <ServerInfo>
-                      Сервер: {transaction.serverName || transaction.serverId}
+                      ID: {transaction.serverId}
                     </ServerInfo>
                   )}
                 </TransactionInfo>
