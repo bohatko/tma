@@ -289,7 +289,9 @@ const Profile: React.FC = () => {
                   <TransactionTitle>
                     {transaction.type === 'RENT' 
                       ? `Аренда сервера ${transaction.serverName ? transaction.serverName : ''}` 
-                      : `Доход от сервера ${transaction.serverName ? transaction.serverName : ''}`} 
+                      : transaction.amount === 10 && !transaction.serverId 
+                        ? 'Начисление бонуса' 
+                        : `Доход от сервера ${transaction.serverName ? transaction.serverName : ''}`} 
                   </TransactionTitle>
                   <TransactionDate>
                     {new Date(transaction.timestamp).toLocaleString('ru-RU')}
