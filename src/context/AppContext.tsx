@@ -228,7 +228,7 @@ export const AppContextProvider: React.FC<{ children: ReactNode }> = ({ children
           id: Date.now().toString() + server.id,
           type: 'INCOME',
           amount: income,
-          description: `Доход от сервера за ${fullHours} час(ов)`,
+          description: `Доход от сервера "${server.name}"`,
           timestamp: new Date(),
           serverId: server.id,
           serverName: server.name
