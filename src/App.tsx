@@ -1,7 +1,7 @@
 import "./App.css";
 import { TonConnectButton } from "@tonconnect/ui-react";
 import styled from "styled-components";
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Mining from './pages/Mining';
 import Store from './pages/Store';
 import Profile from './pages/Profile';
