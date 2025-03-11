@@ -11,6 +11,11 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
 });
 
+// При запуске перенаправляем на /mining
+if (window.location.hash === '' || window.location.hash === '#/') {
+  window.location.hash = '#/mining';
+}
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <TonConnectUIProvider manifestUrl={manifestUrl}>
     <QueryClientProvider client={queryClient}>
