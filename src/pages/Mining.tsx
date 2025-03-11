@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import Notification from '../components/Notification';
 import { useAppContext } from '../context/AppContext';
 import { formatDate } from '../utils/formatDate';
+import { useNavigate } from 'react-router-dom';
 
 const MiningContainer = styled.div`
   padding: 20px;
@@ -361,108 +362,93 @@ const EmptyMessage = styled.div`
   font-style: italic;
 `;
 
+const RentButton = styled.button`
+  background-color: var(--tg-theme-button-color, #0098E9);
+  color: var(--tg-theme-button-text-color, white);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin: 10px 0;
+  transition: opacity 0.2s;
+  
+  &:hover {
+    opacity: 0.9;
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+const ServerStatus = styled.div<{ isActive: boolean }>`
+  color: ${props => props.isActive ? '#4CAF50' : '#F44336'};
+  font-weight: 500;
+  font-size: 14px;
+  margin-top: 5px;
+`;
+
 const Mining: React.FC = () => {
-  const [isMining, setIsMining] = useState<boolean>(false);
   const { state, dispatch } = useAppContext();
   const [showNotification, setShowNotification] = useState<boolean>(false);
   const [notificationMessage, setNotificationMessage] = useState<string>('');
   const [notificationType, setNotificationType] = useState<'success' | 'error'>('success');
-  const [transactions, setTransactions] = useState<Array<{
-    id: number;
-    title: string;
-    date: string;
-    amount: string;
-  }>>([]);
-  
+  const navigate = useNavigate();
+
+  // Автозапуск майнинга при загрузке страницы
   useEffect(() => {
-    // Инициализация состояния майнинга
-    const storedMiningState = localStorage.getItem('isMining');
-    if (storedMiningState === 'true') {
-      setIsMining(true);
-    }
-    
-    // Загрузка транзакций из локального хранилища
-    const storedTransactions = localStorage.getItem('miningTransactions');
-    if (storedTransactions) {
-      setTransactions(JSON.parse(storedTransactions));
-    }
+    startMining();
   }, []);
 
-  useEffect(() => {
-    let earningsInterval: NodeJS.Timeout | null = null;
-
-    if (isMining) {
-      // Добавление дохода с интервалом
-      earningsInterval = setInterval(() => {
-        // Рассчитываем доход на основе арендованных серверов
-        let incomeAmount = 0;
-        
-        // Если есть арендованные серверы, берем их почасовой доход
-        if (state.rentedServers.length > 0) {
-          // Суммируем почасовой доход всех серверов
-          const hourlyIncome = state.rentedServers.reduce(
-            (sum, server) => sum + server.hourlyIncome, 
-            0
-          );
-          
-          // Переводим часовой доход в доход за 5 секунд
-          // (hourlyIncome / 3600) * 5 = hourlyIncome * 5 / 3600
-          incomeAmount = hourlyIncome * 5 / 3600;
-        }
-        
-        // Добавляем доход на баланс только если он больше нуля
-        if (incomeAmount > 0) {
-          dispatch({
-            type: 'SET_BALANCE',
-            payload: state.balance + incomeAmount
-          });
-          
-          // Добавляем транзакцию о начислении
-          const date = new Date();
-          const formattedDate = date.toLocaleString('ru-RU', {
-            day: '2-digit',
-            month: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-          });
-          
-          const incomeTransaction = {
-            id: Date.now(),
-            title: 'Доход от майнинга',
-            date: formattedDate,
-            amount: `+${incomeAmount.toFixed(8)} USDT`
-          };
-          
-          setTransactions(prev => {
-            const newTransactions = [incomeTransaction, ...prev];
-            localStorage.setItem('miningTransactions', JSON.stringify(newTransactions));
-            return newTransactions;
-          });
-          
-          // Добавляем в историю транзакций приложения
-          dispatch({
-            type: 'ADD_TRANSACTION',
-            payload: {
-              id: Date.now().toString(),
-              type: 'INCOME',
-              amount: incomeAmount,
-              description: 'Доход от майнинга',
-              timestamp: new Date(),
-            }
-          });
-        }
-      }, 5000); // Доход начисляется каждые 5 секунд
+  // Функция запуска майнинга
+  const startMining = () => {
+    if (state.rentedServers.length === 0) {
+      showNotificationMessage('Для начала майнинга необходимо арендовать сервер', 'error');
+      return;
     }
+
+    let earningsInterval = setInterval(() => {
+      if (state.rentedServers.length > 0) {
+        const now = Date.now();
+        state.rentedServers.forEach(server => {
+          // Проверяем, не истек ли срок аренды
+          const rentEndDate = server.rentDate + (30 * 24 * 60 * 60 * 1000); // 30 дней в миллисекундах
+          if (now > rentEndDate) {
+            return;
+          }
+
+          const hourlyIncome = server.hourlyIncome;
+          const incomeAmount = hourlyIncome * 5 / 3600;
+
+          if (incomeAmount > 0) {
+            dispatch({
+              type: 'SET_BALANCE',
+              payload: state.balance + incomeAmount
+            });
+
+            dispatch({
+              type: 'ADD_TRANSACTION',
+              payload: {
+                id: Date.now().toString() + server.id,
+                type: 'INCOME',
+                amount: incomeAmount,
+                description: `Доход от сервера "${server.name}"`,
+                timestamp: new Date(),
+                serverId: server.id,
+                serverName: server.name
+              }
+            });
+          }
+        });
+      }
+    }, 5000);
 
     return () => {
       if (earningsInterval) clearInterval(earningsInterval);
     };
-  }, [isMining, dispatch, state.balance, state.rentedServers]);
-
-  // Сохраняем состояние майнинга в localStorage
-  useEffect(() => {
-    localStorage.setItem('isMining', isMining.toString());
-  }, [isMining]);
+  };
 
   // Показываем уведомление
   const showNotificationMessage = (message: string, type: 'success' | 'error' = 'success') => {
@@ -472,22 +458,20 @@ const Mining: React.FC = () => {
     setTimeout(() => setShowNotification(false), 3000);
   };
 
-  // Обработка нажатия на кнопку майнинга
-  const handleMiningClick = () => {
-    // Проверяем наличие арендованных серверов
-    if (!isMining && state.rentedServers.length === 0) {
-      showNotificationMessage('Для начала майнинга необходимо арендовать сервер', 'error');
-      return;
-    }
+  // Функция для расчета оставшегося времени аренды
+  const getRemainingTime = (rentDate: number) => {
+    const now = Date.now();
+    const endDate = rentDate + (30 * 24 * 60 * 60 * 1000);
+    const remainingMs = endDate - now;
     
-    const newMiningState = !isMining;
-    setIsMining(newMiningState);
-    
-    if (newMiningState) {
-      showNotificationMessage('Майнинг запущен', 'success');
-    } else {
-      showNotificationMessage('Майнинг остановлен', 'error');
+    if (remainingMs <= 0) {
+      return 'Аренда закончилась';
     }
+
+    const days = Math.floor(remainingMs / (24 * 60 * 60 * 1000));
+    const hours = Math.floor((remainingMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+    
+    return `${days}д ${hours}ч`;
   };
 
   return (
@@ -504,16 +488,6 @@ const Mining: React.FC = () => {
           USDT {state.balance.toFixed(8)}
         </EarningsAmount>
       </BonusCard>
-      
-      <MiningStatusText>
-        {isMining ? 'Сервер активен' : 'Сервер не активен'}
-      </MiningStatusText>
-      
-      <StatusCircle isMining={isMining} onClick={handleMiningClick}>
-        <MiningIcon isMining={isMining}>
-          {isMining ? 'Стоп Сервер' : 'Старт Сервер'}
-        </MiningIcon>
-      </StatusCircle>
       
       <ServerSection>
         <SectionTitle>Серверы</SectionTitle>
@@ -535,31 +509,46 @@ const Mining: React.FC = () => {
           </StatRow>
         </ServerStatsCard>
         
-        <SectionTitle>Арендованные серверы</SectionTitle>
+        <SectionTitle>
+          Арендованные серверы
+          <RentButton onClick={() => navigate('/store')}>
+            Арендовать сервер
+          </RentButton>
+        </SectionTitle>
         
         {state.rentedServers.length > 0 ? (
           <ServersList>
-            {state.rentedServers.map(server => (
-              <ServerCard key={server.id}>
-                <ServerHeader>
-                  <ServerName>{server.name}</ServerName>
-                </ServerHeader>
-                <ServerContent>
-                  <ServerStat>
-                    <span>Стоимость:</span>
-                    <span>{server.price} USDT</span>
-                  </ServerStat>
-                  <ServerStat>
-                    <span>Доход в час:</span>
-                    <span>{server.hourlyIncome.toFixed(8)} USDT</span>
-                  </ServerStat>
-                  <ServerStat>
-                    <span>Дата аренды:</span>
-                    <span>{formatDate(server.rentDate)}</span>
-                  </ServerStat>
-                </ServerContent>
-              </ServerCard>
-            ))}
+            {state.rentedServers.map(server => {
+              const isActive = Date.now() < (server.rentDate + (30 * 24 * 60 * 60 * 1000));
+              return (
+                <ServerCard key={server.id}>
+                  <ServerHeader>
+                    <ServerName>{server.name}</ServerName>
+                  </ServerHeader>
+                  <ServerContent>
+                    <ServerStat>
+                      <span>Стоимость:</span>
+                      <span>{server.price} USDT</span>
+                    </ServerStat>
+                    <ServerStat>
+                      <span>Доход в час:</span>
+                      <span>{server.hourlyIncome.toFixed(8)} USDT</span>
+                    </ServerStat>
+                    <ServerStat>
+                      <span>Дата аренды:</span>
+                      <span>{formatDate(server.rentDate)}</span>
+                    </ServerStat>
+                    <ServerStat>
+                      <span>Осталось:</span>
+                      <span>{getRemainingTime(server.rentDate)}</span>
+                    </ServerStat>
+                    <ServerStatus isActive={isActive}>
+                      {isActive ? 'Сервер активен' : 'Сервер не активен'}
+                    </ServerStatus>
+                  </ServerContent>
+                </ServerCard>
+              );
+            })}
           </ServersList>
         ) : (
           <EmptyMessage>У вас пока нет арендованных серверов</EmptyMessage>
