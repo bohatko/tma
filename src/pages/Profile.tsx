@@ -301,7 +301,7 @@ const Profile: React.FC = () => {
                   <TransactionInfo>
                     <div>{transaction.description}</div>
                     {transaction.serverName && <div>Сервер: {transaction.serverName}</div>}
-                    <TransactionDate>{formatDate(transaction.timestamp)}</TransactionDate>
+                    <TransactionDate>{formatDate(transaction.timestamp.getTime())}</TransactionDate>
                   </TransactionInfo>
                 </TransactionLeft>
                 <TransactionAmount positive={transaction.type === 'INCOME'}>
