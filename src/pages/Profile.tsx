@@ -126,16 +126,25 @@ const TransactionsList = styled.div`
   gap: 10px;
 `;
 
-const TransactionItem = styled.div<{ type: 'RENT' | 'INCOME' }>`
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 12px 15px;
+const TransactionItem = styled.div`
   display: flex;
   justify-content: space-between;
+  padding: 16px;
+  border-left: 3px solid ${props => props.color || '#4CAF50'};
+  background-color: white;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 100%; // На всю ширину экрана
+`;
+
+const TransactionLeft = styled.div`
+  display: flex;
   align-items: center;
-  
-  border-left: 4px solid ${props => getTransactionColor(props.type)};
+`;
+
+const TransactionIcon = styled.div`
+  margin-right: 10px;
 `;
 
 const TransactionInfo = styled.div`
@@ -154,9 +163,9 @@ const TransactionDate = styled.div`
   font-size: 12px;
 `;
 
-const TransactionAmount = styled.div<{ type: 'RENT' | 'INCOME' }>`
+const TransactionAmount = styled.div<{ positive: boolean }>`
   font-weight: 600;
-  color: ${props => getTransactionColor(props.type)};
+  color: ${props => props.positive ? '#4CAF50' : '#f44336'};
   font-size: 16px;
 `;
 
@@ -283,28 +292,20 @@ const Profile: React.FC = () => {
         
         {filteredTransactions.length > 0 ? (
           <TransactionsList>
-            {filteredTransactions.map((transaction) => (
-              <TransactionItem key={transaction.id} type={transaction.type}>
-                <TransactionInfo>
-                  <TransactionTitle>
-                    {transaction.type === 'RENT' 
-                      ? `Аренда сервера ${transaction.serverName ? transaction.serverName : ''}` 
-                      : transaction.amount === 10 && !transaction.serverId 
-                        ? 'Начисление бонуса' 
-                        : `Доход от сервера ${transaction.serverName ? transaction.serverName : ''}`} 
-                  </TransactionTitle>
-                  <TransactionDate>
-                    {new Date(transaction.timestamp).toLocaleString('ru-RU')}
-                  </TransactionDate>
-                  {transaction.serverId && (
-                    <ServerInfo>
-                      ID: {transaction.serverId}
-                    </ServerInfo>
-                  )}
-                </TransactionInfo>
-                
-                <TransactionAmount type={transaction.type}>
-                  {transaction.type === 'RENT' ? '-' : '+'}{transaction.amount.toFixed(8)} USDT
+            {filteredTransactions.map(transaction => (
+              <TransactionItem key={transaction.id} color={getTransactionColor(transaction.type)}>
+                <TransactionLeft>
+                  <TransactionIcon>
+                    {transaction.type === 'INCOME' ? '+' : '-'}
+                  </TransactionIcon>
+                  <TransactionInfo>
+                    <div>{transaction.description}</div>
+                    {transaction.serverName && <div>Сервер: {transaction.serverName}</div>}
+                    <TransactionDate>{formatDate(transaction.timestamp)}</TransactionDate>
+                  </TransactionInfo>
+                </TransactionLeft>
+                <TransactionAmount positive={transaction.type === 'INCOME'}>
+                  {transaction.type === 'INCOME' ? '+' : '-'}{transaction.amount.toFixed(8)} USDT
                 </TransactionAmount>
               </TransactionItem>
             ))}
