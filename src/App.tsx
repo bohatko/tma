@@ -118,7 +118,7 @@ const AppContent = () => {
               <TonConnectButton />
             </HeaderContainer>
             <Routes>
-              <Route path="/" element={<Navigate to="/mining" replace />} />
+              <Route path="/" element={<Mining />} />
               <Route path="/mining" element={<Mining />} />
               <Route path="/store" element={<Store />} />
               <Route path="/profile" element={<Profile />} />
