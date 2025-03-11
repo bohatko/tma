@@ -404,11 +404,6 @@ const Mining: React.FC = () => {
 
   // Функция запуска майнинга
   const startMining = () => {
-    if (state.rentedServers.length === 0) {
-      showNotificationMessage('Для начала майнинга необходимо арендовать сервер', 'error');
-      return;
-    }
-
     let earningsInterval = setInterval(() => {
       if (state.rentedServers.length > 0) {
         const now = Date.now();
