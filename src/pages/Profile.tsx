@@ -215,10 +215,31 @@ const Balance = styled.div`
   width: 100%;
 `;
 
+const ResetButton = styled.button`
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin: 20px 0;
+  transition: opacity 0.2s;
+  
+  &:hover {
+    opacity: 0.9;
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
 type TransactionTabType = 'all' | 'income' | 'expense';
 
 const Profile: React.FC = () => {
-  const { state } = useAppContext();
+  const { state, dispatch } = useAppContext();
   const [showNotification, setShowNotification] = useState<boolean>(false);
   const [notificationMessage, setNotificationMessage] = useState<string>('');
   const [notificationType, setNotificationType] = useState<'success' | 'error'>('success');
@@ -250,6 +271,14 @@ const Profile: React.FC = () => {
     return true;
   });
   
+  // Функция сброса сессии
+  const handleReset = () => {
+    if (window.confirm('Вы уверены, что хотите сбросить все данные? Это действие нельзя отменить.')) {
+      dispatch({ type: 'RESET_STATE' });
+      showNotificationMessage('Сессия успешно сброшена', 'success');
+    }
+  };
+  
   return (
     <ProfileContainer>
       <Notification 
@@ -264,7 +293,9 @@ const Profile: React.FC = () => {
         Баланс: {state.balance.toFixed(8)} USDT
       </Balance>
       
-      
+      <ResetButton onClick={handleReset}>
+        Сбросить сессию
+      </ResetButton>
       
       <ProfileSection>
         <SectionTitle>История транзакций</SectionTitle>

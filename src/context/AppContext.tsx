@@ -17,7 +17,8 @@ type AppAction =
   | { type: 'UPDATE_RENTED_SERVER'; payload: RentedServer }
   | { type: 'ADD_TRANSACTION'; payload: Transaction }
   | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'LOAD_STATE' };
+  | { type: 'LOAD_STATE' }
+  | { type: 'RESET_STATE' };
 
 // Начальное состояние
 const initialState: AppState = {
@@ -78,6 +79,31 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         balance,
         rentedServers: parsedRentedServers,
         transactions: parsedTransactions
+      };
+      
+    case 'RESET_STATE':
+      // Очищаем localStorage
+      localStorage.setItem('balance', '10');
+      localStorage.setItem('rentedServers', JSON.stringify([]));
+      localStorage.setItem('transactions', JSON.stringify([{
+        id: Date.now().toString(),
+        type: 'INCOME',
+        amount: 10,
+        description: 'Начальный бонус',
+        timestamp: new Date()
+      }]));
+      
+      // Возвращаем начальное состояние
+      return {
+        ...initialState,
+        balance: 10,
+        transactions: [{
+          id: Date.now().toString(),
+          type: 'INCOME',
+          amount: 10,
+          description: 'Начальный бонус',
+          timestamp: new Date()
+        }]
       };
       
     default:
